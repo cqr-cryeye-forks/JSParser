@@ -1,4 +1,6 @@
 from __future__ import print_function
+import json
+
 import tornado.ioloop, tornado.web, tornado.autoreload
 from tornado.escape import json_encode, json_decode
 
@@ -100,10 +102,10 @@ class ViewParseAjaxHandler(BaseHandler):
                 entireLine,lineNum,linkPos = self.findEntireLine(contents, linkStr)
                 discoveredLinks.append(linkStr)
                 outputLinks.append({
-                    "line": entireLine,
+                    # "line": entireLine,
                     "link": linkStr,
                     "lineNum": lineNum,
-                    "linkPos": linkPos
+                    # "linkPos": linkPos
                 })
         return outputLinks
 
@@ -126,7 +128,6 @@ class ViewParseAjaxHandler(BaseHandler):
         
     def fileRoutine(self, url, content):
         html = ""
-        
         # beautify the JS for cleaner parsing
         # note: this can be slow against large JS files and can lead to failure
         prettyContent = self.beautifyJS(content)
@@ -136,24 +137,30 @@ class ViewParseAjaxHandler(BaseHandler):
         
         # if we have results, start building HTML
         if parsedLinks:
-            print("Discovered {} links in {}".format(len(parsedLinks), url))
+            print("Discovered {} links from {}".format(len(parsedLinks), url))
             # generate HTML output
             # html = html+'<h1>{}</h1><div class="file">'.format(url)
             html = html+'<div class="file">'
+            if url[-1] == '/':
+                url = url[:-1]
             for link in parsedLinks:
                 html = html+"<h2>{}</h2>".format(link["link"][1:])
+                link['link'] = str(url) + link['link'][2:]
+                print(link)
                 # Get positions for highlighting
-                startPos = link["linkPos"]
-                endPos = link["linkPos"]+len(link["link"])
+                # startPos = link["linkPos"]
+                # endPos = link["linkPos"]+len(link["link"])
                 # highlight the link
-                if self.isLongLine(link["line"]):
-                    highlightedLine = '...{}<span class="highlight">{}</span>{}...'.format(escape(link["line"][startPos-100:startPos]), link["link"], escape(link["line"][endPos:100]))
-                else:
-                    highlightedLine = '{}<span class="highlight">{}</span>{}'.format(escape(link["line"][:startPos]), link["link"], escape(link["line"][endPos:]))
+                # if self.isLongLine(link["line"]):
+                #     highlightedLine = '...{}<span class="highlight">{}</span>{}...'.format(escape(link["line"][startPos-100:startPos]), link["link"], escape(link["line"][endPos:100]))
+                # else:
+                #     highlightedLine = '{}<span class="highlight">{}</span>{}'.format(escape(link["line"][:startPos]), link["link"], escape(link["line"][endPos:]))
                 # generate the link HTML
-                html = html+'<div class="link">{}: {}</div>'.format(link["lineNum"], highlightedLine)
+                # html = html+'<div class="link">{}: {}</div>'.format(link["lineNum"], highlightedLine)
+                html = html+'<div class="link">{}</div>'.format(link["lineNum"])
             html = html+'</div>'
-        return html
+        return json.dumps(parsedLinks)
+        # return html
 
     def fetchURL(self, url, headers=[]):
         sc = safeurl.SafeURL()
@@ -248,5 +255,3 @@ application = tornado.web.Application(
 if __name__ == "__main__":
     application.listen(portNum)
     tornado.ioloop.IOLoop.current().start()
-
-

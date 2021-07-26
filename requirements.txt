@@ -1,6 +1,6 @@
 safeurl
-tornado
+tornado==5.1
 jsbeautifier
 netaddr
-pycurl
+pycurl==7.43.0.3
 BeautifulSoup4
