@@ -206,7 +206,8 @@ class ViewParseAjaxHandler(BaseHandler):
 
             # set content-type
             self.set_header('Content-Type', 'application/json')
-            
+            with open('output.json', 'w') as f:
+                json.dump(json.loads(data), f, indent=2)
             # output
             self.write(json_encode({
                 "url": url,
